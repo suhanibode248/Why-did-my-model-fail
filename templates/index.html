@@ -1,263 +1,1096 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Model Analyzer PRO</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Did My Model Fail?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#09090b; --s1:#111113; --s2:#18181b; --s3:#27272a;
+  --border:#3f3f46; --border-dim:#27272a;
+  --text:#fafafa; --muted:#a1a1aa; --dim:#71717a;
+  --gold:#f59e0b; --gold-dim:rgba(245,158,11,.12); --gold-border:rgba(245,158,11,.3);
+  --green:#22c55e; --green-dim:rgba(34,197,94,.12); --green-border:rgba(34,197,94,.3);
+  --red:#ef4444; --red-dim:rgba(239,68,68,.12); --red-border:rgba(239,68,68,.3);
+  --orange:#f97316; --orange-dim:rgba(249,115,22,.12);
+  --blue:#3b82f6; --blue-dim:rgba(59,130,246,.12);
+  --purple:#a855f7; --purple-dim:rgba(168,85,247,.12);
+  --r:10px; --r-lg:14px;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;line-height:1.5}
 
-    <style>
-        body {
-            margin:0;
-            font-family:'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f172a, #020617);
-            color:white;
-        }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-        .slide {
-            display:none;
-            min-height:100vh;
-            text-align:center;
-            padding-top:60px;
-        }
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
 
-        .active {
-            display:block;
-        }
+/* ── TOPBAR ── */
+.topbar{height:52px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--border-dim);background:rgba(9,9,11,.85);backdrop-filter:blur(16px);position:sticky;top:0;z-index:200;gap:12px}
+.logo{font-family:var(--mono);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 
-        .navbar {
-            background:#020617;
-            padding:15px;
-            font-size:22px;
-            font-weight:bold;
-            text-align:center;
-        }
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;transition:all .15s;background:transparent;color:var(--muted)}
+.btn:hover{border-color:var(--border);background:var(--s2);color:var(--text)}
+.btn-primary{background:var(--gold);color:#000;border-color:transparent;font-weight:600}
+.btn-primary:hover{background:#fbbf24;transform:translateY(-1px)}
+.btn-primary:disabled{background:var(--s3);color:var(--dim);cursor:not-allowed;transform:none}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
-        .card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            padding:25px;
-            margin:20px auto;
-            width:70%;
-            border-radius:16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-        }
+/* ── LOGIN ── */
+#loginScreen{align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 50% at 50% 40%,rgba(245,158,11,.04) 0%,transparent 70%)}
+.login-card{width:360px;background:var(--s1);border:1px solid var(--border-dim);border-radius:var(--r-lg);overflow:hidden}
+.login-head{padding:28px 28px 20px;border-bottom:1px solid var(--border-dim)}
+.login-head h1{font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
+.login-head p{font-size:12px;color:var(--dim)}
+.login-body{padding:24px 28px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
+.field input{width:100%;background:var(--bg);border:1px solid var(--border-dim);color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 12px;border-radius:var(--r);outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--gold)}
+.hint-box{background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--gold);margin-bottom:16px;font-family:var(--mono)}
+.err-msg{font-size:12px;color:var(--red);text-align:center;margin-top:10px;display:none}
 
-        input, button {
-            padding:12px;
-            margin:10px;
-            border-radius:8px;
-            border:none;
-        }
+/* ── UPLOAD ── */
+#uploadScreen{align-items:center;justify-content:center}
+.upload-inner{width:100%;max-width:580px;padding:32px 20px}
+.upload-inner h1{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1.2;margin-bottom:8px}
+.upload-inner h1 span{color:var(--gold)}
+.upload-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.7}
+.dropzone{border:1.5px dashed var(--border);border-radius:var(--r-lg);padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--s1);position:relative}
+.dropzone:hover,.dropzone.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.dz-icon{width:40px;height:40px;margin:0 auto 12px;color:var(--muted)}
+.dz-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.dz-sub{font-size:12px;color:var(--dim)}
+.dz-file{font-size:12px;color:var(--gold);margin-top:8px;font-family:var(--mono);font-weight:700}
+#fileInput{display:none}
+.fmt-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.fmt-chip{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--border-dim);color:var(--dim);font-family:var(--mono);transition:all .15s}
+.fmt-chip.active{border-color:var(--gold-border);color:var(--gold);background:var(--gold-dim)}
 
-        button {
-            background: linear-gradient(45deg, #38bdf8, #0ea5e9);
-            color:white;
-            cursor:pointer;
-        }
+/* ── LOADER ── */
+#loaderScreen{align-items:center;justify-content:center;gap:20px}
+.spinner{width:40px;height:40px;border:2.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-steps{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.loader-step{font-size:12px;font-family:var(--mono);color:var(--dim);display:flex;align-items:center;gap:8px;transition:color .3s}
+.loader-step.active{color:var(--gold)}
+.loader-step.done{color:var(--green)}
+.step-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.pbar{width:240px;height:3px;background:var(--s3);border-radius:99px;overflow:hidden}
+.pbar-fill{height:100%;background:var(--gold);border-radius:99px;width:0;animation:pfill 5s ease forwards}
+@keyframes pfill{0%{width:4%}70%{width:72%}95%{width:90%}}
 
-        table {
-            width:100%;
-            border-collapse:collapse;
-        }
+/* ── RESULTS ── */
+#resultsScreen{flex-direction:column}
+.tabs{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border-dim);background:var(--s1);overflow-x:auto;flex-shrink:0}
+.tabs::-webkit-scrollbar{height:0}
+.tab{padding:12px 16px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-        th {
-            background:#38bdf8;
-            color:black;
-        }
+.tab-pane{display:none;flex:1;overflow-y:auto;padding:24px;max-width:1200px;width:100%;margin:0 auto}
+.tab-pane.active{display:block}
 
-        th, td {
-            padding:12px;
-            border-bottom:1px solid #334155;
-        }
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border-dim);border-radius:var(--r-lg);padding:18px 20px;transition:border-color .15s}
+.card:hover{border-color:var(--border)}
+.card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-label svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col-span-2{grid-column:span 2}
+@media(max-width:700px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.col-span-2{grid-column:span 1}}
 
-        #loading {
-            display:none;
-        }
-    </style>
+/* ── VERDICT BANNER ── */
+.verdict{border-radius:var(--r-lg);padding:20px 24px;display:flex;align-items:center;gap:16px;border:1px solid;margin-bottom:14px}
+.verdict.strong{background:var(--green-dim);border-color:var(--green-border)}
+.verdict.moderate{background:var(--gold-dim);border-color:var(--gold-border)}
+.verdict.weak{background:var(--red-dim);border-color:var(--red-border)}
+.verdict-icon{font-size:36px;flex-shrink:0}
+.verdict-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:2px}
+.verdict-title{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.5px}
+.verdict-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.verdict-score{margin-left:auto;font-family:var(--mono);font-size:44px;font-weight:700;letter-spacing:-2px;flex-shrink:0}
+.verdict.strong .verdict-score{color:var(--green)}
+.verdict.moderate .verdict-score{color:var(--gold)}
+.verdict.weak .verdict-score{color:var(--red)}
+
+/* ── METRIC TILES ── */
+.metric-tile{background:var(--s2);border-radius:var(--r);padding:14px 16px}
+.metric-val{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:2px}
+.metric-lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.badge-high{background:var(--red-dim);color:var(--red)}
+.badge-medium{background:var(--orange-dim);color:var(--orange)}
+.badge-low{background:var(--blue-dim);color:var(--blue)}
+.badge-none{background:var(--green-dim);color:var(--green)}
+.badge-gold{background:var(--gold-dim);color:var(--gold)}
+
+/* ── REASON CARDS ── */
+.reason-card{display:flex;gap:12px;padding:12px 14px;border-radius:var(--r);border:1px solid var(--border-dim);margin-bottom:8px;background:var(--s2);border-left-width:3px}
+.reason-card.high{border-left-color:var(--red)}
+.reason-card.medium{border-left-color:var(--orange)}
+.reason-card.low{border-left-color:var(--blue)}
+.reason-card.none{border-left-color:var(--green)}
+.reason-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.reason-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.reason-card.high .reason-icon{background:var(--red-dim);color:var(--red)}
+.reason-card.medium .reason-icon{background:var(--orange-dim);color:var(--orange)}
+.reason-card.low .reason-icon{background:var(--blue-dim);color:var(--blue)}
+.reason-card.none .reason-icon{background:var(--green-dim);color:var(--green)}
+.reason-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.reason-detail{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ── TIP ROW ── */
+.tip-row{display:flex;gap:10px;font-size:12px;color:var(--muted);line-height:1.6;padding:10px 0;border-bottom:1px solid var(--border-dim)}
+.tip-row:last-child{border-bottom:none}
+.tip-arrow{color:var(--gold);font-weight:700;flex-shrink:0;margin-top:1px}
+
+/* ── MODEL TABLE ── */
+.model-table{width:100%;border-collapse:collapse;font-size:13px}
+.model-table thead tr{border-bottom:1px solid var(--border-dim)}
+.model-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);padding:6px 10px;text-align:left}
+.model-table td{padding:10px 10px;border-bottom:1px solid var(--border-dim)}
+.model-table tr:last-child td{border-bottom:none}
+.model-table tr.best-row td{background:var(--gold-dim)}
+.model-table tr.best-row td:first-child{color:var(--gold);font-weight:600}
+.bar-wrap{display:flex;align-items:center;gap:8px}
+.bar-track{flex:1;height:4px;background:var(--s3);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--gold)}
+.time-badge{font-family:var(--mono);font-size:11px;color:var(--dim);background:var(--s3);padding:2px 6px;border-radius:4px}
+
+/* ── CONFUSION MATRIX ── */
+.cm-table{border-collapse:separate;border-spacing:4px;margin:0 auto}
+.cm-cell{width:48px;height:48px;text-align:center;border-radius:6px;font-size:14px;font-weight:700;font-family:var(--mono)}
+.cm-label{font-size:11px;color:var(--dim);font-weight:400;font-family:var(--sans)}
+
+/* ── CV BARS ── */
+.cv-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cv-lbl{width:44px;font-size:11px;color:var(--dim);font-family:var(--mono)}
+.cv-track{flex:1;height:6px;background:var(--s3);border-radius:99px;overflow:hidden}
+.cv-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .6s ease}
+.cv-val{width:40px;text-align:right;font-size:12px;font-family:var(--mono)}
+
+/* ── FEATURE IMPORTANCE ── */
+.feat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.feat-name{width:120px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-family:var(--mono)}
+.feat-track{flex:1;height:8px;background:var(--s3);border-radius:99px;overflow:hidden}
+.feat-fill{height:100%;border-radius:99px}
+.feat-val{width:44px;text-align:right;font-size:12px;font-family:var(--mono);color:var(--muted)}
+
+/* ── DATA PROFILE ── */
+.profile-table{width:100%;border-collapse:collapse;font-size:12px}
+.profile-table thead tr{border-bottom:1px solid var(--border-dim)}
+.profile-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);padding:6px 10px;text-align:left}
+.profile-table td{padding:9px 10px;border-bottom:1px solid var(--border-dim);vertical-align:middle}
+.profile-table tr:last-child td{border-bottom:none}
+.profile-table tr:hover td{background:rgba(255,255,255,.02)}
+.dtype-chip{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--s3);color:var(--dim);font-family:var(--mono)}
+.mini-hist{display:inline-flex;align-items:flex-end;gap:1px;height:20px}
+.hist-b{width:4px;border-radius:1px;background:var(--gold);opacity:.7;min-height:2px}
+.missing-warn{color:var(--orange);font-weight:600}
+
+/* ── PLAYGROUND ── */
+.play-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.play-field label{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.play-field input{width:100%;background:var(--bg);border:1px solid var(--border-dim);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;border-radius:var(--r);outline:none;transition:border-color .15s}
+.play-field input:focus{border-color:var(--gold)}
+.pred-box{background:var(--s2);border:1px solid var(--border-dim);border-radius:var(--r-lg);padding:20px 24px;text-align:center;margin-top:12px}
+.pred-class{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--gold);letter-spacing:-1px}
+.pred-conf{font-size:12px;color:var(--muted);margin-top:4px}
+.prob-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.prob-label{width:70px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.prob-track{flex:1;height:5px;background:var(--s3);border-radius:99px;overflow:hidden}
+.prob-fill{height:100%;border-radius:99px;background:var(--blue)}
+.prob-val{width:40px;font-size:12px;font-family:var(--mono);color:var(--muted)}
+
+/* ── TUNING ── */
+.tuning-diff{display:flex;align-items:center;gap:20px;padding:16px 20px;background:var(--s2);border-radius:var(--r);margin-bottom:16px}
+.tuning-num{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-1px}
+.tuning-arrow{font-size:20px;color:var(--dim)}
+.param-chip{display:inline-block;background:var(--s3);border:1px solid var(--border-dim);border-radius:6px;padding:3px 10px;font-size:12px;font-family:var(--mono);margin:3px}
+.param-chip strong{color:var(--gold)}
+
+/* ── FE SUGGESTIONS ── */
+.fe-item{display:flex;gap:10px;padding:10px 14px;border-radius:var(--r);border:1px solid var(--border-dim);margin-bottom:8px;background:var(--s2);border-left-width:3px}
+.fe-item.high{border-left-color:var(--red)}
+.fe-item.medium{border-left-color:var(--orange)}
+.fe-item.low{border-left-color:var(--blue)}
+.fe-item.none{border-left-color:var(--green)}
+.fe-text{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ── PER-CLASS TABLE ── */
+.pc-table{width:100%;border-collapse:collapse;font-size:12px}
+.pc-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border-dim)}
+.pc-table td{padding:9px 10px;border-bottom:1px solid var(--border-dim)}
+.pc-table tr:last-child td{border-bottom:none}
+
+/* ── CHART CONTAINERS ── */
+.chart-wrap{position:relative;width:100%}
+</style>
 </head>
-
 <body>
 
-<div class="navbar">🚀 AI Model Analyzer PRO</div>
-
-<!-- LOGIN -->
-<div id="loginSlide" class="slide active">
-    <h1>🔐 Login</h1>
-    <div class="card">
-        <input type="text" id="username" placeholder="Username"><br>
-        <input type="password" id="password" placeholder="Password"><br>
-        <button onclick="login()">Login</button>
+<!-- ══════════════════════ LOGIN ══════════════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>wdmmf<span style="color:var(--dim)">.app</span></div>
+    <div class="topbar-right" style="font-size:11px;color:var(--dim);font-family:var(--mono)">v4.0</div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center">
+    <div class="login-card">
+      <div class="login-head">
+        <h1>Why Did My Model Fail?</h1>
+        <p>ML diagnostics · 7 models · full failure analysis</p>
+      </div>
+      <div class="login-body">
+        <div class="hint-box">Demo — username: <strong>admin</strong> · password: <strong>1234</strong></div>
+        <div class="field"><label>Username</label><input id="uname" type="text" placeholder="admin" autocomplete="username"></div>
+        <div class="field"><label>Password</label><input id="upass" type="password" placeholder="••••" autocomplete="current-password"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Sign in
+        </button>
+        <div class="err-msg" id="loginErr">Incorrect username or password.</div>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- INPUT -->
-<div id="inputSlide" class="slide">
-    <h1>📂 Upload Dataset</h1>
+<!-- ══════════════════════ UPLOAD ══════════════════════ -->
+<div id="uploadScreen" class="screen">
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>wdmmf<span style="color:var(--dim)">.app</span></div>
+    <div class="topbar-right">
+      <button class="btn" onclick="goTo('loginScreen')">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center">
+    <div class="upload-inner">
+      <h1>Diagnose your<br><span>ML model.</span></h1>
+      <p class="upload-sub">Upload any tabular dataset. We train 7 classifiers in parallel, run cross-validation, feature analysis, learning curves, and full failure diagnosis — all in seconds. Last column = target label.</p>
 
-    <form method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
-        <input type="file" name="file" required><br>
-        <button type="submit">Analyze</button>
-    </form>
+      <div class="dropzone" id="dz" onclick="document.getElementById('fileInput').click()">
+        <div class="dz-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="dz-title">Drop your dataset here or click to browse</div>
+        <div class="dz-sub">CSV · Excel · JSON · Parquet · TSV · Feather · Stata · SAS · SPSS · HDF5 · Pickle · ODS</div>
+        <div class="dz-file" id="fName"></div>
+      </div>
+      <input type="file" id="fileInput"
+        accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm,.xlsb,.ods,.json,.parquet,.feather,.pkl,.pickle,.h5,.hdf5,.dta,.sas7bdat,.sav"
+        onchange="onFile(this)">
 
-    <p id="loading">⏳ Analyzing dataset...</p>
+      <div class="fmt-chips" id="fmtChips">
+        <span class="fmt-chip" data-ext=".csv">.csv</span>
+        <span class="fmt-chip" data-ext=".xlsx">.xlsx</span>
+        <span class="fmt-chip" data-ext=".xls">.xls</span>
+        <span class="fmt-chip" data-ext=".json">.json</span>
+        <span class="fmt-chip" data-ext=".parquet">.parquet</span>
+        <span class="fmt-chip" data-ext=".tsv">.tsv</span>
+        <span class="fmt-chip" data-ext=".feather">.feather</span>
+        <span class="fmt-chip" data-ext=".pkl">.pkl</span>
+        <span class="fmt-chip" data-ext=".h5">.h5</span>
+        <span class="fmt-chip" data-ext=".dta">.dta</span>
+        <span class="fmt-chip" data-ext=".sas7bdat">.sas7bdat</span>
+        <span class="fmt-chip" data-ext=".sav">.sav</span>
+        <span class="fmt-chip" data-ext=".ods">.ods</span>
+      </div>
+
+      <button class="btn btn-primary" id="analyzeBtn" disabled onclick="doAnalyze()"
+        style="width:100%;justify-content:center;padding:12px;margin-top:16px;font-size:14px">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Run full diagnostic
+      </button>
+      <div class="err-msg" id="uploadErr" style="display:none;margin-top:10px;text-align:left"></div>
+    </div>
+  </div>
 </div>
 
-<!-- OUTPUT -->
-<div id="outputSlide" class="slide">
-
-{% if result %}
-
-<h1>📊 Results</h1>
-
-<!-- 🔙 BACK BUTTON -->
-<div style="margin:20px;">
-    <button onclick="goBack()">⬅ Back to Upload</button>
+<!-- ══════════════════════ LOADER ══════════════════════ -->
+<div id="loaderScreen" class="screen" style="align-items:center;justify-content:center;gap:24px">
+  <div class="topbar"><div class="logo"><div class="logo-dot"></div>wdmmf<span style="color:var(--dim)">.app</span></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+    <div class="spinner"></div>
+    <div class="loader-steps" id="loaderSteps">
+      <div class="loader-step active" id="step0"><div class="step-dot"></div>Reading dataset</div>
+      <div class="loader-step" id="step1"><div class="step-dot"></div>Training 7 models in parallel</div>
+      <div class="loader-step" id="step2"><div class="step-dot"></div>Cross-validation (3-fold)</div>
+      <div class="loader-step" id="step3"><div class="step-dot"></div>Computing ROC & AUC</div>
+      <div class="loader-step" id="step4"><div class="step-dot"></div>Feature importance analysis</div>
+      <div class="loader-step" id="step5"><div class="step-dot"></div>Building learning curves</div>
+      <div class="loader-step" id="step6"><div class="step-dot"></div>Profiling dataset columns</div>
+      <div class="loader-step" id="step7"><div class="step-dot"></div>Hyperparameter tuning</div>
+    </div>
+    <div class="pbar"><div class="pbar-fill"></div></div>
+  </div>
 </div>
 
-<div class="card">
-    <h2>🚀 Final Decision</h2>
-    <p>{{ result.final_score }}%</p>
-    <p>{{ result.final_status }}</p>
-</div>
+<!-- ══════════════════════ RESULTS ══════════════════════ -->
+<div id="resultsScreen" class="screen">
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>wdmmf<span style="color:var(--dim)">.app</span></div>
+    <div style="font-size:11px;color:var(--dim);font-family:var(--mono)" id="topbarMeta"></div>
+    <div class="topbar-right">
+      <button class="btn" id="exportBtn" onclick="exportPDF()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF
+      </button>
+      <button class="btn" onclick="goTo('uploadScreen')">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        New analysis
+      </button>
+    </div>
+  </div>
 
-<div class="card">
-    <h2>🏆 Best Model</h2>
-    <p>{{ result.best_model }}</p>
-    <p>Confidence: {{ result.confidence }}%</p>
-</div>
+  <div class="tabs" id="tabsBar">
+    <div class="tab active" onclick="showTab(0)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </div>
+    <div class="tab" onclick="showTab(1)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Diagnosis
+    </div>
+    <div class="tab" onclick="showTab(2)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Models
+    </div>
+    <div class="tab" onclick="showTab(3)">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Features
+    </div>
+    <div class="tab" onclick="showTab(4)">
+      <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Learning curve
+    </div>
+    <div class="tab" onclick="showTab(5)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      Playground
+    </div>
+    <div class="tab" onclick="showTab(6)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Data profile
+    </div>
+    <div class="tab" onclick="showTab(7)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Tuning
+    </div>
+    <div class="tab" onclick="showTab(8)">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Radar
+    </div>
+    <div class="tab" onclick="showTab(9)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      Correlation
+    </div>
+  </div>
 
-<div class="card">
-    <h2>📊 Dataset Quality</h2>
-    <p>{{ result.dataset_quality }} ({{ result.dataset_quality_score }}/100)</p>
-</div>
-
-<div class="card">
-    <h2>⚠️ Class Balance</h2>
-    <p>{{ result.imbalance_status }}</p>
-</div>
-
-<div class="card">
-    <h2>📁 Dataset Info</h2>
-    <p>Rows: {{ result.dataset_info.rows }}</p>
-    <p>Columns: {{ result.dataset_info.columns }}</p>
-    <p>Missing: {{ result.dataset_info.missing }}</p>
-</div>
-
-<div class="card">
-    <h2>📊 Model Comparison</h2>
-    <table>
-        <tr>
-            <th>Model</th>
-            <th>Acc</th>
-            <th>Prec</th>
-            <th>Recall</th>
-            <th>F1</th>
-        </tr>
-
-        {% for name, m in result.models.items() %}
-        <tr>
-            <td>{{ name }}</td>
-            <td>{{ "%.3f"|format(m.acc) }}</td>
-            <td>{{ "%.3f"|format(m.precision) }}</td>
-            <td>{{ "%.3f"|format(m.recall) }}</td>
-            <td>{{ "%.3f"|format(m.f1) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-
-<div class="card">
-    <h2>📈 Feature Importance</h2>
-    <canvas id="featureChart"></canvas>
-</div>
-
-<div class="card">
-    <h2>📊 Accuracy Comparison</h2>
-    <canvas id="accChart"></canvas>
-</div>
-
-<div class="card">
-    <h2>📉 Confusion Matrix</h2>
-    <pre>{{ result.confusion_matrix }}</pre>
-</div>
-
-<div class="card">
-    <h2>📈 ROC Curve (AUC: {{ result.roc_auc }})</h2>
-    <canvas id="rocChart"></canvas>
-</div>
-
-<div class="card">
-    <h2>🔁 Model Validation</h2>
-    <p>Cross Validation: {{ result.cv_score }}</p>
-    <p>Train Accuracy: {{ result.train_acc }}</p>
-    <p>Test Accuracy: {{ result.test_acc }}</p>
+  <div class="tab-pane active" id="pane0"></div>
+  <div class="tab-pane" id="pane1"></div>
+  <div class="tab-pane" id="pane2"></div>
+  <div class="tab-pane" id="pane3"></div>
+  <div class="tab-pane" id="pane4"></div>
+  <div class="tab-pane" id="pane5"></div>
+  <div class="tab-pane" id="pane6"></div>
+  <div class="tab-pane" id="pane7"></div>
+  <div class="tab-pane" id="pane8"></div>
+  <div class="tab-pane" id="pane9"></div>
 </div>
 
 <script>
-const models = {{ result.models | tojson | safe }};
-const names = Object.keys(models);
-const accs = names.map(n => models[n].acc);
+'use strict';
+let selectedFile = null, lastData = null;
+const charts = {};
 
-new Chart(document.getElementById("accChart"), {
-    type: "bar",
-    data: { labels: names, datasets: [{ label: "Accuracy", data: accs }] }
+const SUPPORTED = new Set(['.csv','.tsv','.txt','.xlsx','.xls','.xlsm','.xlsb','.ods',
+  '.json','.parquet','.feather','.pkl','.pickle','.h5','.hdf5','.dta','.sas7bdat','.sav']);
+
+function getExt(n){const m=n.toLowerCase().match(/(\.[^.]+)$/);return m?m[1]:'';}
+function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function $(id){return document.getElementById(id);}
+function pct(v){return (v*100).toFixed(1)+'%';}
+function fmt(v){return typeof v==='number'?(v*100).toFixed(1)+'%':v;}
+
+// ── LOGIN
+function doLogin(){
+  if($('uname').value==='admin'&&$('upass').value==='1234'){goTo('uploadScreen');}
+  else{showErr('loginErr','Incorrect username or password.');}
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&$('loginScreen').classList.contains('active'))doLogin();
 });
 
-let imp = {{ result.feature_importance | tojson | safe }};
-if (!imp || imp.length === 0) imp = [0,0,0];
+// ── UPLOAD
+function showErr(id,msg){const el=$(id);el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
 
-new Chart(document.getElementById("featureChart"), {
-    type: "bar",
-    data: {
-        labels: imp.map((_, i) => "F" + (i+1)),
-        datasets: [{ label: "Importance", data: imp }]
+function onFile(inp){
+  const f=inp.files[0];if(!f)return;
+  const ext=getExt(f.name);
+  if(!SUPPORTED.has(ext)){showErr('uploadErr','Unsupported format "'+ext+'". Please pick a supported file type.');return;}
+  $('uploadErr').style.display='none';
+  selectedFile=f;
+  $('fName').textContent='✓ '+f.name+' ('+formatSize(f.size)+')';
+  $('analyzeBtn').disabled=false;
+  $('dz').style.borderColor='var(--gold)';
+  document.querySelectorAll('.fmt-chip').forEach(c=>c.classList.toggle('active',c.dataset.ext===ext));
+}
+
+function formatSize(b){if(b<1024)return b+'B';if(b<1048576)return (b/1024).toFixed(1)+'KB';return (b/1048576).toFixed(1)+'MB';}
+
+const dz=$('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];if(!f)return;
+  const inp=$('fileInput');
+  const dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;
+  onFile(inp);
+});
+
+// ── LOADER animation
+const STEPS=['Reading dataset','Training 7 models in parallel','Cross-validation (3-fold)',
+  'Computing ROC & AUC','Feature importance analysis','Building learning curves',
+  'Profiling dataset columns','Hyperparameter tuning'];
+let stepTimer=null, currentStep=0;
+
+function startStepAnimation(){
+  currentStep=0;
+  document.querySelectorAll('.loader-step').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i===0)el.classList.add('active');
+  });
+  stepTimer=setInterval(()=>{
+    const steps=document.querySelectorAll('.loader-step');
+    if(currentStep<steps.length-1){
+      steps[currentStep].classList.remove('active');
+      steps[currentStep].classList.add('done');
+      currentStep++;
+      steps[currentStep].classList.add('active');
     }
-});
+  },700);
+}
 
-new Chart(document.getElementById("rocChart"), {
-    type: "line",
-    data: {
-        labels: {{ result.roc_fpr | tojson | safe }},
-        datasets: [{
-            label: "ROC Curve",
-            data: {{ result.roc_tpr | tojson | safe }},
-            fill:false
-        }]
+// ── ANALYZE
+async function doAnalyze(){
+  if(!selectedFile)return;
+  goTo('loaderScreen');
+  startStepAnimation();
+  const fd=new FormData();fd.append('file',selectedFile);
+  try{
+    const res=await fetch('/analyze',{method:'POST',body:fd});
+    const data=await res.json();
+    clearInterval(stepTimer);
+    if(data.error){
+      goTo('uploadScreen');
+      showErr('uploadErr','Error: '+data.error);
+      return;
     }
-});
+    lastData=data;
+    renderAll(data);
+    goTo('resultsScreen');
+    $('topbarMeta').textContent=data.dataset_info.filename+' · '+data.dataset_info.rows+' rows · '+data.total_time+'s';
+  }catch(err){
+    clearInterval(stepTimer);
+    goTo('uploadScreen');
+    showErr('uploadErr','Network error: '+err.message);
+  }
+}
+
+// ── TABS
+function showTab(idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-pane').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(idx===8&&lastData)drawRadar(lastData);
+  if(idx===9&&lastData)drawCorr(lastData);
+}
+
+function destroyCharts(){Object.values(charts).forEach(c=>c&&c.destroy());for(const k in charts)delete charts[k];}
+
+const BASE_OPTS={
+  responsive:true,maintainAspectRatio:true,
+  plugins:{legend:{labels:{color:'#a1a1aa',font:{family:'JetBrains Mono',size:10},boxWidth:10}}},
+  scales:{
+    x:{ticks:{color:'#71717a',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(63,63,70,.4)'}},
+    y:{ticks:{color:'#71717a',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(63,63,70,.4)'}}
+  }
+};
+
+function renderAll(d){
+  destroyCharts();
+  pane0(d);pane1(d);pane2(d);pane3(d);pane4(d);
+  pane5(d);pane6(d);pane7(d);
+}
+
+// ─────────────────────────────────────────────
+// PANE 0 — OVERVIEW
+// ─────────────────────────────────────────────
+function pane0(d){
+  const sc=d.final_status.includes('STRONG')?'strong':d.final_status.includes('MODERATE')?'moderate':'weak';
+  const icons={strong:'🏆',moderate:'⚡',weak:'💀'};
+  const html=`
+    <div class="verdict ${sc}">
+      <div class="verdict-icon">${icons[sc]}</div>
+      <div>
+        <div class="verdict-label">Verdict</div>
+        <div class="verdict-title">${d.final_status}</div>
+        <div class="verdict-sub">Best model: <strong>${d.best_model}</strong> · ${d.dataset_info.rows.toLocaleString()} rows × ${d.dataset_info.columns} features · ${d.imbalance_status}</div>
+      </div>
+      <div class="verdict-score">${d.final_score}%</div>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:14px">
+      <div class="metric-tile">
+        <div class="metric-val" style="color:var(--gold)">${pct(d.test_acc)}</div>
+        <div class="metric-lbl">Test accuracy</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val" style="color:var(--muted)">${pct(d.train_acc)}</div>
+        <div class="metric-lbl">Train accuracy</div>
+        <div class="metric-sub">Gap: ${((d.train_acc-d.test_acc)*100).toFixed(1)}pp</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val" style="color:var(--green)">${pct(d.cv_score)}</div>
+        <div class="metric-lbl">CV score</div>
+        <div class="metric-sub">± ${pct(d.cv_std)}</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val" style="color:var(--blue)">${d.roc_auc||'—'}</div>
+        <div class="metric-lbl">ROC AUC</div>
+        <div class="metric-sub">${d.is_binary?'Binary':'Multiclass'}</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val">${d.imbalance_ratio}</div>
+        <div class="metric-lbl">Imbalance ratio</div>
+        <div class="metric-sub">${d.imbalance_status}</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val" style="color:${d.dataset_info.missing>0?'var(--orange)':'var(--green)'}">${d.dataset_info.missing}</div>
+        <div class="metric-lbl">Missing values</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val">${d.dataset_info.rows.toLocaleString()}</div>
+        <div class="metric-lbl">Total rows</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-val">${d.total_time}s</div>
+        <div class="metric-lbl">Analysis time</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Model accuracy comparison
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartAcc"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          Class distribution
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chartCls"></canvas></div>
+      </div>
+    </div>`;
+  $('pane0').innerHTML=html;
+
+  requestAnimationFrame(()=>{
+    const names=Object.keys(d.models);
+    const accs=names.map(n=>parseFloat((d.models[n].acc*100).toFixed(1)));
+    const bgs=names.map(n=>n===d.best_model?'rgba(245,158,11,.9)':'rgba(161,161,170,.3)');
+    charts.acc=new Chart($('chartAcc'),{
+      type:'bar',
+      data:{labels:names.map(n=>n.length>15?n.slice(0,14)+'…':n),
+        datasets:[{label:'Accuracy %',data:accs,backgroundColor:bgs,borderRadius:4,borderSkipped:false}]},
+      options:{...BASE_OPTS,plugins:{...BASE_OPTS.plugins,legend:{display:false}},
+        scales:{...BASE_OPTS.scales,y:{...BASE_OPTS.scales.y,min:0,max:100}}}
+    });
+    const cls_labels=Object.keys(d.class_distribution);
+    const cls_vals=Object.values(d.class_distribution);
+    const palette=['rgba(245,158,11,.8)','rgba(34,197,94,.8)','rgba(59,130,246,.8)','rgba(239,68,68,.8)','rgba(168,85,247,.8)'];
+    charts.cls=new Chart($('chartCls'),{
+      type:'doughnut',
+      data:{labels:cls_labels,datasets:[{data:cls_vals,backgroundColor:palette,borderWidth:0,hoverOffset:4}]},
+      options:{plugins:{legend:{labels:{color:'#a1a1aa',font:{family:'JetBrains Mono',size:10},boxWidth:10}}},cutout:'62%'}
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// PANE 1 — DIAGNOSIS
+// ─────────────────────────────────────────────
+const REASON_ICONS={
+  fire:`<svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+  'trending-down':`<svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`,
+  'chart-bar':`<svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  scale:`<svg viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21"/><path d="M3 12h18"/><path d="M3 6l9-3 9 3"/><path d="M3 18l9 3 9-3"/></svg>`,
+  'alert-triangle':`<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  'question-mark':`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  database:`<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+  target:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  'circle-check':`<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+};
+
+function pane1(d){
+  const reasons=d.failure_reasons.map(r=>`
+    <div class="reason-card ${r.severity}">
+      <div class="reason-icon">${REASON_ICONS[r.icon]||REASON_ICONS.target}</div>
+      <div style="flex:1">
+        <div class="reason-title">${r.title} <span class="badge badge-${r.severity}" style="margin-left:4px">${r.severity}</span></div>
+        <div class="reason-detail">${r.detail}</div>
+      </div>
+    </div>`).join('');
+  const tips=d.tips.map(t=>`<div class="tip-row"><div class="tip-arrow">→</div><div>${t}</div></div>`).join('');
+  const fe=d.fe_suggestions.map(f=>`<div class="fe-item ${f.severity}"><div class="fe-text">${f.msg}</div></div>`).join('');
+
+  $('pane1').innerHTML=`
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="card col-span-2">
+        <div class="card-label"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Failure diagnosis</div>
+        ${reasons}
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Recommendations</div>
+        ${tips}
+      </div>
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Feature engineering suggestions</div>
+        ${fe}
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// PANE 2 — MODELS
+// ─────────────────────────────────────────────
+function pane2(d){
+  const sorted=Object.entries(d.models).sort((a,b)=>b[1].acc-a[1].acc);
+  const rows=sorted.map(([name,m])=>`
+    <tr class="${name===d.best_model?'best-row':''}">
+      <td style="font-family:var(--mono)">${name===d.best_model?'★ ':' '}${name}</td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar-track"><div class="bar-fill" style="width:${m.acc*100}%"></div></div>
+          <span style="font-family:var(--mono);font-size:12px;min-width:40px">${pct(m.acc)}</span>
+        </div>
+      </td>
+      <td style="font-family:var(--mono)">${pct(m.precision)}</td>
+      <td style="font-family:var(--mono)">${pct(m.recall)}</td>
+      <td style="font-family:var(--mono)">${pct(m.f1)}</td>
+      <td><span class="time-badge">${m.train_time||0}s</span></td>
+    </tr>`).join('');
+
+  const cvBars=d.cv_each.map((v,i)=>`
+    <div class="cv-row">
+      <div class="cv-lbl">Fold ${i+1}</div>
+      <div class="cv-track"><div class="cv-fill" style="width:${v*100}%"></div></div>
+      <div class="cv-val">${pct(v)}</div>
+    </div>`).join('');
+
+  let cmHtml='<div style="color:var(--dim);font-size:12px">No confusion matrix available.</div>';
+  if(d.confusion_matrix&&d.confusion_matrix.length>0){
+    const cm=d.confusion_matrix, labels=d.class_labels;
+    const maxV=Math.max(...cm.flat()||[1]);
+    const hdr=labels.map(l=>`<td class="cm-label" style="padding:0 4px;text-align:center">${l}</td>`).join('');
+    const cmRows=cm.map((row,i)=>{
+      const cells=row.map((v,j)=>{
+        const int=maxV>0?v/maxV:0, diag=i===j;
+        const bg=diag?`rgba(34,197,94,${.1+int*.6})`:`rgba(239,68,68,${int*.5})`;
+        const col=diag?'var(--green)':int>.3?'var(--red)':'var(--muted)';
+        return `<td class="cm-cell" style="background:${bg};color:${col}">${v}</td>`;
+      }).join('');
+      return `<tr><td class="cm-label" style="padding:0 4px;text-align:right">${labels[i]||i}</td>${cells}</tr>`;
+    }).join('');
+    cmHtml=`<div style="overflow-x:auto;text-align:center">
+      <table class="cm-table"><tr><td></td>${hdr}</tr>${cmRows}</table>
+      <div style="font-size:11px;color:var(--dim);margin-top:8px">Rows = Actual · Columns = Predicted</div>
+    </div>`;
+  }
+
+  let rocHtml='';
+  if(d.is_binary&&d.roc_fpr.length>0){
+    rocHtml=`<div class="card" style="margin-top:14px">
+      <div class="card-label"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ROC curve · AUC = ${d.roc_auc} · Optimal threshold = ${d.optimal_threshold}</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartRoc"></canvas></div>
+    </div>`;
+  }
+
+  let pcHtml='';
+  if(d.per_class_metrics&&d.per_class_metrics.length>0){
+    const pcRows=d.per_class_metrics.map(m=>`<tr>
+      <td style="font-family:var(--mono)">${m.label}</td>
+      <td style="font-family:var(--mono)">${pct(m.precision)}</td>
+      <td style="font-family:var(--mono)">${pct(m.recall)}</td>
+      <td style="font-family:var(--mono)">${pct(m.f1)}</td>
+      <td style="font-family:var(--mono)">${m.support}</td>
+    </tr>`).join('');
+    pcHtml=`<div class="card" style="margin-top:14px">
+      <div class="card-label"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Per-class metrics</div>
+      <table class="pc-table">
+        <thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead>
+        <tbody>${pcRows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  $('pane2').innerHTML=`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-label"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Model leaderboard — best: ${d.best_model}</div>
+      <div style="overflow-x:auto">
+        <table class="model-table">
+          <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Train time</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>Cross-validation (3-fold)</div>
+        <div style="margin-bottom:14px;display:flex;align-items:baseline;gap:8px">
+          <span style="font-family:var(--mono);font-size:24px;font-weight:700;color:var(--gold)">${pct(d.cv_score)}</span>
+          <span style="font-size:12px;color:var(--dim)">± ${pct(d.cv_std)} std</span>
+        </div>
+        ${cvBars}
+      </div>
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Confusion matrix</div>
+        ${cmHtml}
+      </div>
+    </div>
+    ${rocHtml}
+    ${pcHtml}`;
+
+  requestAnimationFrame(()=>{
+    if(d.is_binary&&d.roc_fpr.length>0&&$('chartRoc')){
+      charts.roc=new Chart($('chartRoc'),{
+        type:'line',
+        data:{labels:d.roc_fpr.map(v=>v.toFixed(2)),datasets:[
+          {label:`ROC (AUC=${d.roc_auc})`,data:d.roc_tpr,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.06)',fill:true,pointRadius:0,tension:.3,borderWidth:2},
+          {label:'Random',data:d.roc_fpr,borderColor:'#52525b',borderDash:[4,4],pointRadius:0,borderWidth:1}
+        ]},
+        options:{...BASE_OPTS,scales:{...BASE_OPTS.scales,y:{...BASE_OPTS.scales.y,min:0,max:1},x:{...BASE_OPTS.scales.x,min:0,max:1}}}
+      });
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// PANE 3 — FEATURES
+// ─────────────────────────────────────────────
+function pane3(d){
+  const top=d.feature_importance.slice(0,12);
+  const maxV=Math.max(...top.map(f=>f.value),0.0001);
+  const colors_=['#f59e0b','#22c55e','#3b82f6','#a855f7','#ef4444','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6','#f43f5e','#8b5cf6'];
+  const bars=top.map((f,i)=>`
+    <div class="feat-row">
+      <div class="feat-name" title="${f.name}">${f.name}</div>
+      <div class="feat-track"><div class="feat-fill" style="width:${(f.value/maxV*100).toFixed(1)}%;background:${colors_[i%colors_.length]}"></div></div>
+      <div class="feat-val">${f.value.toFixed(4)}</div>
+    </div>`).join('');
+
+  $('pane3').innerHTML=`
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Top feature importance — ${d.best_model}</div>
+        ${bars}
+      </div>
+      <div class="card">
+        <div class="card-label"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Feature importance chart</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="chartFeat"></canvas></div>
+      </div>
+    </div>`;
+
+  requestAnimationFrame(()=>{
+    charts.feat=new Chart($('chartFeat'),{
+      type:'bar',
+      data:{
+        labels:top.map(f=>f.name.length>14?f.name.slice(0,13)+'…':f.name),
+        datasets:[{label:'Importance',data:top.map(f=>f.value),backgroundColor:top.map((_,i)=>colors_[i%colors_.length]+'cc'),borderRadius:4,borderSkipped:false}]
+      },
+      options:{...BASE_OPTS,indexAxis:'y',plugins:{...BASE_OPTS.plugins,legend:{display:false}},
+        scales:{x:{...BASE_OPTS.scales.x,min:0},y:{...BASE_OPTS.scales.y}}}
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// PANE 4 — LEARNING CURVE
+// ─────────────────────────────────────────────
+function pane4(d){
+  const lc=d.learning_curve;
+  $('pane4').innerHTML=`
+    <div class="card">
+      <div class="card-label"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Learning curve — ${d.best_model}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">How model performance changes as training data size grows. A widening gap = overfitting; both low = underfitting.</div>
+      ${lc.sizes&&lc.sizes.length>0
+        ?'<div class="chart-wrap" style="height:280px"><canvas id="chartLC"></canvas></div>'
+        :'<div style="color:var(--dim);font-size:12px">Learning curve not available for this model/dataset.</div>'}
+    </div>`;
+
+  if(lc.sizes&&lc.sizes.length>0){
+    requestAnimationFrame(()=>{
+      charts.lc=new Chart($('chartLC'),{
+        type:'line',
+        data:{labels:lc.sizes,datasets:[
+          {label:'Train accuracy',data:lc.train.map(v=>parseFloat((v*100).toFixed(2))),
+            borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.07)',fill:true,tension:.35,pointRadius:4,borderWidth:2},
+          {label:'Validation accuracy',data:lc.val.map(v=>parseFloat((v*100).toFixed(2))),
+            borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.07)',fill:true,tension:.35,pointRadius:4,borderWidth:2}
+        ]},
+        options:{...BASE_OPTS,scales:{...BASE_OPTS.scales,
+          y:{...BASE_OPTS.scales.y,min:0,max:100,title:{display:true,text:'Accuracy %',color:'#71717a',font:{family:'JetBrains Mono',size:9}}},
+          x:{...BASE_OPTS.scales.x,title:{display:true,text:'Training samples',color:'#71717a',font:{family:'JetBrains Mono',size:9}}}
+        }}
+      });
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+// PANE 5 — PLAYGROUND
+// ─────────────────────────────────────────────
+function pane5(d){
+  const fields=d.feature_names.map(f=>`
+    <div class="play-field">
+      <label title="${f}">${f}</label>
+      <input type="number" id="pf_${CSS.escape(f)}" placeholder="0" step="any">
+    </div>`).join('');
+  $('pane5').innerHTML=`
+    <div class="card">
+      <div class="card-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Prediction playground — ${d.best_model}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Enter feature values to get a real-time prediction from the best model.</div>
+      <div class="play-grid">${fields}</div>
+      <button class="btn btn-primary" onclick="runPrediction()" style="margin-top:4px">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Predict
+      </button>
+      <div id="predOut"></div>
+    </div>`;
+}
+
+async function runPrediction(){
+  if(!lastData)return;
+  const vals={};
+  lastData.feature_names.forEach(f=>{
+    const el=document.getElementById('pf_'+CSS.escape(f));
+    vals[f]=el?parseFloat(el.value)||0:0;
+  });
+  try{
+    const res=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({values:vals})});
+    const data=await res.json();
+    if(data.error){$('predOut').innerHTML=`<div style="color:var(--red);margin-top:12px;font-size:12px">Error: ${data.error}</div>`;return;}
+    const probRows=Object.entries(data.probabilities).map(([k,v])=>`
+      <div class="prob-row">
+        <div class="prob-label">${k}</div>
+        <div class="prob-track"><div class="prob-fill" style="width:${v}%"></div></div>
+        <div class="prob-val">${v.toFixed(1)}%</div>
+      </div>`).join('');
+    $('predOut').innerHTML=`
+      <div class="pred-box">
+        <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Prediction</div>
+        <div class="pred-class">${data.prediction}</div>
+        <div class="pred-conf">Confidence: ${data.confidence.toFixed(1)}%</div>
+        <div style="margin-top:16px;text-align:left">${probRows}</div>
+      </div>`;
+  }catch(e){$('predOut').innerHTML=`<div style="color:var(--red);margin-top:12px;font-size:12px">Error: ${e.message}</div>`;}
+}
+
+// ─────────────────────────────────────────────
+// PANE 6 — DATA PROFILE
+// ─────────────────────────────────────────────
+function pane6(d){
+  const rows=d.dataset_profile.map(col=>{
+    const histHtml=col.hist?`<div class="mini-hist">${col.hist.map(v=>{
+      const h=Math.max(2,Math.round(v/Math.max(...col.hist,1)*18));
+      return `<div class="hist-b" style="height:${h}px"></div>`;
+    }).join('')}</div>`:'—';
+    const statsHtml=col.mean!==undefined
+      ?`<span style="font-family:var(--mono);color:var(--muted)">μ=${col.mean} σ=${col.std} [${col.min}, ${col.max}]</span>
+        <span style="font-family:var(--mono);color:var(--dim);font-size:11px;display:block">skew=${col.skew||'—'} Q1=${col.q25||'—'} Q3=${col.q75||'—'}</span>`
+      :Object.entries(col.top_values||{}).slice(0,4).map(([k,v])=>`<span class="time-badge">${k}: ${v}</span>`).join(' ');
+    return `<tr>
+      <td style="font-family:var(--mono);font-weight:500">${col.name}</td>
+      <td><span class="dtype-chip">${col.dtype}</span></td>
+      <td style="font-family:var(--mono)">${col.unique}</td>
+      <td class="${col.missing>0?'missing-warn':''}">${col.missing>0?col.missing:'—'}</td>
+      <td>${statsHtml}</td>
+      <td>${histHtml}</td>
+    </tr>`;
+  }).join('');
+  $('pane6').innerHTML=`
+    <div class="card">
+      <div class="card-label"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Dataset column profile — ${d.dataset_info.rows} rows × ${d.dataset_info.columns} columns</div>
+      <div style="overflow-x:auto">
+        <table class="profile-table">
+          <thead><tr><th>Column</th><th>Type</th><th>Unique</th><th>Missing</th><th>Stats / Top values</th><th>Distribution</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// PANE 7 — TUNING
+// ─────────────────────────────────────────────
+function pane7(d){
+  const tr=d.tuning_report;
+  if(!tr){
+    $('pane7').innerHTML=`<div class="card">
+      <div class="card-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Hyperparameter tuning</div>
+      <div style="color:var(--dim);font-size:13px">Automated tuning is available for <strong>Logistic Regression</strong> and <strong>Random Forest</strong>. Best model was <strong>${d.best_model}</strong> — tuning was skipped. Re-run with LR or RF as the top model to enable.</div>
+    </div>`;
+    return;
+  }
+  const impColor=tr.improvement>0?'var(--green)':'var(--red)';
+  const params=Object.entries(tr.best_params).map(([k,v])=>`<span class="param-chip">${k}: <strong>${v}</strong></span>`).join('');
+  $('pane7').innerHTML=`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-label"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Hyperparameter tuning — ${tr.model}</div>
+      <div class="tuning-diff">
+        <div>
+          <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Default</div>
+          <div class="tuning-num" style="color:var(--muted)">${pct(tr.default_acc)}</div>
+        </div>
+        <div class="tuning-arrow">→</div>
+        <div>
+          <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Tuned</div>
+          <div class="tuning-num" style="color:var(--gold)">${pct(tr.tuned_acc)}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:${impColor}">${tr.improvement>0?'+':''}${tr.improvement}%</div>
+          <div style="font-size:11px;color:var(--dim)">improvement</div>
+        </div>
+      </div>
+      <div style="margin-top:8px">Best params: ${params}</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>CV score per parameter value</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartTune"></canvas></div>
+    </div>`;
+
+  requestAnimationFrame(()=>{
+    charts.tune=new Chart($('chartTune'),{
+      type:'bar',
+      data:{labels:tr.cv_results.map(r=>r.param),
+        datasets:[{label:'CV Accuracy %',data:tr.cv_results.map(r=>parseFloat((r.score*100).toFixed(2))),
+          backgroundColor:'rgba(34,197,94,.7)',borderRadius:4,borderSkipped:false}]},
+      options:{...BASE_OPTS,plugins:{...BASE_OPTS.plugins,legend:{display:false}}}
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// PANE 8 — RADAR
+// ─────────────────────────────────────────────
+function drawRadar(d){
+  $('pane8').innerHTML=`<div class="card"><div class="card-label"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Model radar — all metrics comparison</div><div class="chart-wrap" style="height:380px"><canvas id="chartRadar"></canvas></div></div>`;
+  const names=Object.keys(d.radar_data);
+  const palette=['#f59e0b','#22c55e','#3b82f6','#ef4444','#a855f7','#f97316','#06b6d4'];
+  const datasets=names.map((n,i)=>({
+    label:n,
+    data:['acc','precision','recall','f1'].map(m=>parseFloat((d.radar_data[n][m]*100).toFixed(1))),
+    borderColor:palette[i%palette.length],
+    backgroundColor:palette[i%palette.length]+'20',
+    pointBackgroundColor:palette[i%palette.length],
+    pointRadius:4,borderWidth:2
+  }));
+  requestAnimationFrame(()=>{
+    if(charts.radar)charts.radar.destroy();
+    charts.radar=new Chart($('chartRadar'),{
+      type:'radar',
+      data:{labels:['Accuracy','Precision','Recall','F1'],datasets},
+      options:{
+        responsive:true,maintainAspectRatio:true,
+        scales:{r:{ticks:{color:'#71717a',backdropColor:'transparent',font:{family:'JetBrains Mono',size:9}},
+          grid:{color:'rgba(63,63,70,.5)'},
+          pointLabels:{color:'#fafafa',font:{family:'JetBrains Mono',size:11}},
+          min:0,max:100}},
+        plugins:{legend:{labels:{color:'#a1a1aa',font:{family:'JetBrains Mono',size:10},boxWidth:10}}}
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// PANE 9 — CORRELATION
+// ─────────────────────────────────────────────
+function drawCorr(d){
+  if(!d.corr_labels||d.corr_labels.length<2){
+    $('pane9').innerHTML=`<div class="card"><div class="card-label">Correlation heatmap</div><div style="color:var(--dim);font-size:12px">Not enough numeric features to compute correlation.</div></div>`;
+    return;
+  }
+  const n=d.corr_labels.length;
+  const size=Math.min(560,Math.max(240,n*46));
+  $('pane9').innerHTML=`<div class="card"><div class="card-label"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>Pearson correlation heatmap</div><div style="overflow-x:auto;text-align:center"><canvas id="corrCanvas" width="${size}" height="${size}"></canvas></div></div>`;
+  requestAnimationFrame(()=>{
+    const canvas=$('corrCanvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    const mat=d.corr_matrix, labels=d.corr_labels;
+    const cell=size/n;
+    for(let i=0;i<n;i++){for(let j=0;j<n;j++){
+      const v=mat[i][j], abs=Math.abs(v);
+      ctx.fillStyle=v>0?`rgba(245,158,11,${0.08+abs*0.82})`:`rgba(59,130,246,${0.08+abs*0.82})`;
+      ctx.fillRect(j*cell,i*cell,cell-1.5,cell-1.5);
+      ctx.fillStyle=abs>0.45?'#09090b':'#a1a1aa';
+      ctx.font=`bold ${Math.min(10,cell*0.25)}px JetBrains Mono`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(v.toFixed(2),j*cell+cell/2,i*cell+cell/2);
+    }}
+    // Row labels
+    ctx.font=`${Math.min(10,cell*0.25)}px JetBrains Mono`;
+    ctx.fillStyle='#71717a';
+  });
+}
+
+// ─────────────────────────────────────────────
+// EXPORT PDF
+// ─────────────────────────────────────────────
+async function exportPDF(){
+  if(!lastData)return;
+  const btn=$('exportBtn');
+  btn.textContent='⏳ Generating...';btn.disabled=true;
+  try{
+    const res=await fetch('/export_pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lastData)});
+    const data=await res.json();
+    if(data.error){alert('PDF error: '+data.error);return;}
+    const a=document.createElement('a');
+    a.href='data:application/pdf;base64,'+data.pdf;
+    a.download='wdmmf_report.pdf';a.click();
+  }catch(e){alert('Export failed: '+e.message);}
+  finally{btn.innerHTML='<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export PDF';btn.disabled=false;}
+}
 </script>
-
-{% endif %}
-</div>
-
-<script>
-function login() {
-    let u = document.getElementById("username").value;
-    let p = document.getElementById("password").value;
-
-    if(u === "admin" && p === "1234") {
-        document.getElementById("loginSlide").classList.remove("active");
-        document.getElementById("inputSlide").classList.add("active");
-    } else {
-        alert("Invalid Login");
-    }
-}
-
-function showLoader() {
-    document.getElementById("loading").style.display = "block";
-}
-
-// 🔥 BACK FUNCTION
-function goBack() {
-    document.getElementById("outputSlide").classList.remove("active");
-    document.getElementById("inputSlide").classList.add("active");
-}
-
-{% if result %}
-document.getElementById("loginSlide").classList.remove("active");
-document.getElementById("inputSlide").classList.remove("active");
-document.getElementById("outputSlide").classList.add("active");
-{% endif %}
-</script>
-
 </body>
 </html>
