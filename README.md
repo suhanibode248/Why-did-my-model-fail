@@ -2,7 +2,9 @@
 Why Did My Model Fail? – Automated ML Diagnosis System
 
 Author: Suhani Bode
+
 Affiliation: Rashtrasant Tukadoji Maharaj Nagpur University
+
 Date: June 2026
 
 # Abstract
