@@ -1,6 +1,6 @@
 ## Live Demo
 
-🔗 **Deployment Link:** [Click Here to View Project][Why-did-my-model-fail.vercel.app]
+🔗 **Deployment Link:** ([Click Here to View Project][Why-did-my-model-fail.vercel.app])
 
 You can access and test the complete working project using the live deployment link above.
 
