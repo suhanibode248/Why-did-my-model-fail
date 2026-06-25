@@ -1,0 +1,190 @@
+================================================================================
+                   MODEL FAILURE PROJECT - PROJECT STRUCTURE
+================================================================================
+
+PROJECT ROOT: model_failure_project/
+│
+├── app.py (36 KB)
+│   └── Main Flask application with ML model training and analysis
+│       ├── File upload and preprocessing utilities
+│       ├── 7 ML model implementations (DT, RF, LR, SVM, KNN, NB, GB)
+│       ├── Failure detection and diagnosis engine
+│       ├── Feature importance computation
+│       ├── Performance metrics calculation
+│       ├── Hyperparameter tuning
+│       └── PDF report generation
+│
+├── requirements.txt
+│   └── Python dependencies (Flask, pandas, scikit-learn, reportlab)
+│
+├── README.md
+│   └── Project brief description
+│
+├── static/
+│   ├── shap.png (24 KB)
+│   │   └── SHAP value explanation image
+│   └── shap_plot.png (24 KB)
+│       └── SHAP plot visualization
+│
+├── templates/
+│   └── index.html (64 KB)
+│       └── Complete web UI with interactive visualizations
+│           ├── File upload interface
+│           ├── Dataset profile section
+│           ├── Model training display
+│           ├── Performance metrics dashboard
+│           ├── Failure diagnosis report
+│           ├── Feature importance charts
+│           ├── ROC curve visualization
+│           ├── Confusion matrix display
+│           ├── Learning curves
+│           ├── Hyperparameter tuning results
+│           └── PDF report download
+│
+└── uploads/
+    └── Temporary directory for uploaded datasets (empty at project start)
+
+================================================================================
+                            KEY DIRECTORIES
+================================================================================
+
+STATIC DIRECTORY:
+  - SHAP (SHapley Additive exPlanations) value images
+  - Pre-generated explanation visualizations
+  - Used for model interpretation documentation
+  - Total size: ~52 KB
+
+TEMPLATES DIRECTORY:
+  - Single large HTML file with complete web interface
+  - Bootstrap-based responsive design
+  - Chart.js for visualizations
+  - Interactive JavaScript for real-time updates
+  - Total size: ~64 KB
+
+UPLOADS DIRECTORY:
+  - Runtime directory for user-uploaded CSV/Excel files
+  - Temporary storage during processing
+  - Created on first file upload
+
+================================================================================
+                            FILE STATISTICS
+================================================================================
+
+Total Project Size: ~952 KB
+  - Application Code: ~36 KB (app.py)
+  - Web Templates: ~64 KB (HTML/CSS/JS)
+  - Static Assets: ~52 KB (Images)
+  - Configuration: ~4 KB (requirements.txt, README.md)
+  - Runtime: Uploads directory (dynamic)
+
+Programming Language: Python 3
+Framework: Flask (Web Framework)
+ML Libraries: scikit-learn, pandas, numpy
+Frontend: HTML5, CSS3, JavaScript (Chart.js)
+Report Generation: ReportLab (PDF)
+
+================================================================================
+                        SUPPORTED FILE FORMATS
+================================================================================
+
+Data File Input Formats:
+  • CSV (.csv) - Comma-separated values
+  • TSV (.tsv) - Tab-separated values
+  • TXT (.txt) - Text files (auto-delimiter detection)
+  • Excel (.xlsx, .xls, .xlsm, .xlsb, .ods)
+  • JSON (.json) - JavaScript Object Notation
+  • Parquet (.parquet) - Apache Parquet format
+  • Feather (.feather) - Arrow Feather format
+  • Pickle (.pkl, .pickle) - Python serialized objects
+  • HDF5 (.h5, .hdf5) - Hierarchical Data Format
+  • Stata (.dta) - Stata statistics files
+  • SAS (.sas7bdat) - SAS database files
+  • SPSS (.sav) - SPSS statistics files
+
+Output Formats:
+  • HTML (Web interface visualization)
+  • PDF (Generated report with findings)
+  • JSON (API response data)
+
+================================================================================
+                         MODELS INCLUDED
+================================================================================
+
+1. Decision Tree Classifier
+   - Default depth: 8
+   - Good for interpretability
+
+2. Random Forest Classifier
+   - 50 estimators
+   - Parallel processing enabled
+
+3. Logistic Regression
+   - Max iterations: 300
+   - Solver: SAGA
+
+4. Support Vector Machine (SVM)
+   - Kernel: Linear
+   - Fast and efficient
+
+5. K-Nearest Neighbors
+   - Parallel processing enabled
+   - Adaptive k selection
+
+6. Naive Bayes (Gaussian)
+   - Probabilistic classifier
+   - Baseline model
+
+7. Gradient Boosting Classifier
+   - 50 estimators
+   - Max depth: 4
+   - Subsample: 0.8
+
+================================================================================
+                       ANALYSIS FEATURES
+================================================================================
+
+1. Data Profiling:
+   - Column statistics (min, max, mean, std)
+   - Data type detection
+   - Missing value analysis
+   - Unique value counts
+   - Distribution histograms
+
+2. Model Training:
+   - Parallel training of 7 models
+   - Automatic best model selection
+   - Cross-validation scoring
+   - Performance metrics on test set
+
+3. Failure Diagnosis:
+   - Overfitting detection
+   - Underfitting detection
+   - Class imbalance analysis
+   - Feature variance assessment
+   - Correlation analysis
+
+4. Performance Analysis:
+   - Accuracy, Precision, Recall, F1-score
+   - Confusion matrix
+   - ROC-AUC curve (binary classification)
+   - Per-class metrics
+   - Learning curves
+
+5. Feature Analysis:
+   - Feature importance scores
+   - Permutation importance
+   - Correlation matrix
+   - Variance detection
+   - Skewness analysis
+
+6. Hyperparameter Tuning:
+   - Automated RandomizedSearchCV
+   - Performance improvement tracking
+   - Best parameters recommendation
+
+7. Report Generation:
+   - PDF report with findings
+   - Diagnostic summary
+   - Recommendations for improvement
+
+================================================================================
