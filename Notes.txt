@@ -222,18 +222,8 @@ INSTALLATION STEPS:
 
 DEPLOYMENT OPTIONS:
 
-Option A - Heroku (Recommended for cloud):
 
-  1. Install Heroku CLI
-  2. Create Procfile:
-     $ echo "web: python app.py" > Procfile
-  3. Create runtime.txt:
-     $ echo "python-3.11.0" > runtime.txt
-  4. Deploy:
-     $ heroku create your-app-name
-     $ git push heroku main
-
-Option B - Vercel:
+Option A - Vercel:
 
   1. Create vercel.json:
      {
@@ -242,32 +232,10 @@ Option B - Vercel:
      }
   2. Deploy: vercel --prod
 
-Option C - AWS EC2:
 
-  1. Launch Ubuntu instance
-  2. SSH into instance
-  3. Install Python 3.11
-  4. Clone repository
-  5. Install dependencies
-  6. Run with Gunicorn:
-     $ gunicorn -w 4 -b 0.0.0.0:5000 app:app
-  7. Configure Nginx reverse proxy
 
-Option D - Docker:
 
-  1. Create Dockerfile:
-     FROM python:3.11-slim
-     WORKDIR /app
-     COPY requirements.txt .
-     RUN pip install -r requirements.txt
-     COPY . .
-     CMD ["python", "app.py"]
-  
-  2. Build and run:
-     $ docker build -t model-failure .
-     $ docker run -p 5000:5000 model-failure
-
-Option E - Local Development Server:
+Option B - Local Development Server:
 
   $ python app.py
   Access at http://localhost:5000
@@ -1208,9 +1176,8 @@ Project Philosophy:
 REPOSITORY & SOURCE CODE:
 
 GitHub:
-  Primary: https://github.com/yourusername/model-failure-project
-  (Replace with actual GitHub username and repository URL)
-
+  Primary: https://github.com/suhanibode248/model-failure-project
+  
 Code Repository Structure:
   • Main codebase: /model_failure_project
   • Web interface: /templates/index.html
@@ -1218,162 +1185,5 @@ Code Repository Structure:
   • Dependencies: requirements.txt
   • Documentation: README.md
 
-DEPLOYMENT & ACCESS:
 
-Live Deployment Options:
-
-Option 1 - Heroku:
-  URL: https://model-failure-detector.herokuapp.com
-  • Accessible worldwide
-  • Auto-deployment from GitHub
-  • Free tier limited
-
-Option 2 - Vercel:
-  URL: https://model-failure.vercel.app
-  • Fast serverless deployment
-  • Global CDN
-  • Free tier available
-
-Option 3 - AWS:
-  URL: https://model-failure.aws.example.com
-  • Scalable infrastructure
-  • High availability
-  • Enterprise support
-
-Option 4 - Google Cloud:
-  URL: https://model-failure-app.run.app
-  • Cloud Run deployment
-  • Auto-scaling
-  • Good documentation
-
-Option 5 - Local Development:
-  URL: http://localhost:5000
-  • Run on personal machine
-  • Full control
-  • No internet required (optional)
-
-DOCUMENTATION RESOURCES:
-
-Official Docs:
-  • GitHub README: Project overview and quick start
-  • Wiki: Detailed guides and tutorials
-  • Issues: Bug tracking and feature requests
-  • Discussions: Community Q&A
-
-Technology Documentation:
-  • Flask: https://flask.palletsprojects.com
-  • Scikit-learn: https://scikit-learn.org/stable/
-  • Pandas: https://pandas.pydata.org/
-  • ReportLab: https://www.reportlab.com/
-
-CONTRIBUTING:
-
-How to Contribute:
-  1. Fork repository on GitHub
-  2. Create feature branch: git checkout -b feature/new-feature
-  3. Make changes and commit: git commit -m "Add new feature"
-  4. Push to branch: git push origin feature/new-feature
-  5. Open Pull Request on GitHub
-  6. Wait for review and merge
-
-Contribution Guidelines:
-  • Code should follow PEP 8 style guide
-  • Add tests for new features
-  • Update documentation
-  • Explain changes in PR description
-  • Reference any related issues
-
-Areas for Contribution:
-  • New ML algorithms
-  • Additional file format support
-  • Enhanced visualizations
-  • Performance optimizations
-  • Documentation improvements
-  • Bug fixes
-  • UI/UX improvements
-
-SUPPORT & COMMUNITY:
-
-Getting Help:
-  • GitHub Issues: Report bugs, request features
-  • GitHub Discussions: Ask questions, share ideas
-  • Email: Send direct inquiries (if provided)
-  • Community Forum: (if applicable)
-
-Bug Reporting:
-  • Describe issue clearly
-  • Include dataset sample (if possible)
-  • Mention Python/Flask versions
-  • Provide error message/screenshot
-  • List steps to reproduce
-
-Feature Requests:
-  • Suggest new capabilities
-  • Explain use case
-  • Discuss implementation approach
-  • Link related issues
-
-LICENSING:
-
-License Type: MIT License (typically)
-  • Open source
-  • Free for commercial use
-  • Must include license in distribution
-  • No warranty provided
-
-RELATED PROJECTS:
-
-Similar Tools:
-  • Auto-sklearn: Automated ML in Python
-  • TPOT: Tree-based pipeline optimization
-  • H2O AutoML: Automatic ML platform
-  • AutoKeras: Automated neural networks
-  • MLflow: ML workflow management
-
-Complementary Tools:
-  • Jupyter Notebook: Interactive analysis
-  • TensorFlow: Deep learning framework
-  • PyTorch: Deep learning framework
-  • XGBoost: Gradient boosting library
-  • LightGBM: Fast gradient boosting
-  • Optuna: Hyperparameter optimization
-
-CITATION:
-
-If using this project in research:
-
-BibTeX:
-  @misc{model-failure-2024,
-    author = {Your Name},
-    title = {Why Did My Model Fail? - ML Diagnostic Tool},
-    year = {2024},
-    url = {https://github.com/yourusername/model-failure-project}
-  }
-
-CHANGELOG:
-
-Version History:
-  • v1.0 - Initial release
-  • v1.1 - Added hyperparameter tuning
-  • v1.2 - Improved failure detection
-  • v2.0 - Multi-model support (7 algorithms)
-  • v2.1 - Enhanced visualizations
-  • (Check GitHub for latest version)
-
-ROADMAP:
-
-Planned Features:
-  • [ ] Deep learning model support
-  • [ ] Automated feature engineering
-  • [ ] Time-series data support
-  • [ ] Regression task support
-  • [ ] Multi-class problem handling
-  • [ ] Model deployment recommendations
-  • [ ] A/B testing framework
-  • [ ] Explainability (SHAP values integration)
-  • [ ] Cloud storage integration
-  • [ ] API endpoint for programmatic access
-
-================================================================================
-                            END OF PROJECT NOTES
 ================================================================================
